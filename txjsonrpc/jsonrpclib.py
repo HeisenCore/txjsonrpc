@@ -4,6 +4,7 @@ http://cheeseshop.python.org/pypi/simplejson
 """
 import xmlrpclib
 from datetime import datetime
+from bson import json_util
 
 try:
     import json
@@ -86,7 +87,7 @@ def dumps(obj, **kwargs):
             obj = {"jsonrpc": "2.0", "result": result, "id": id}
     else:
         obj = {"result": result, "error": error, "id": id}
-    return json.dumps(obj, cls=JSONRPCEncoder, **kwargs)
+    return json_util.dumps(obj, cls=JSONRPCEncoder, **kwargs)
 
 
 def loads(string, **kws):

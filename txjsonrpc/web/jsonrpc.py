@@ -28,7 +28,8 @@ from twisted.web import http
 
 from txjsonrpc import jsonrpclib
 from txjsonrpc.jsonrpc import BaseProxy, BaseQueryFactory, BaseSubhandler
-
+from heisen.core.log import logger
+from heisen.config.settings import APP_NAME
 
 # Useful so people don't need to import xmlrpclib directly.
 Fault = xmlrpclib.Fault
@@ -146,6 +147,17 @@ class JSONRPC(resource.Resource, BaseSubhandler):
             version = jsonrpclib.VERSION_PRE1
         # XXX this all needs to be re-worked to support logic for multiple
         # versions...
+
+        if request.getAllHeaders().get('x-user', None):
+            username = request.getAllHeaders().get('x-user', None)
+        else:
+            username = APP_NAME
+
+        if request.getAllHeaders().get('x-address', None):
+            address = request.getAllHeaders().get('x-address', None)
+        else:
+            address = 'localhost'
+
         try:
             function = self._getFunction(functionPath)
             d = None
@@ -159,12 +171,16 @@ class JSONRPC(resource.Resource, BaseSubhandler):
             else:
                 request.setHeader("content-type", "text/javascript")
 
-            if hasattr(function, 'with_request'):
-                args = [request] + args
-            elif d:
-                d.addCallback(context.call, function, *args, **kwargs)
+            if getattr(function, 'with_activity_log', False):
+                d = defer.maybeDeferred(
+                    function, rpc_username=username,
+                    rpc_address=address, *args, **kwargs
+                )
+            elif getattr(function, 'with_request', False):
+                d = defer.maybeDeferred(function, rpc_request=request, *args, **kwargs)
             else:
                 d = defer.maybeDeferred(function, *args, **kwargs)
+
             d.addErrback(self._ebRender, id)
             d.addCallback(self._cbRender, request, id, version)
 
@@ -200,7 +216,15 @@ class JSONRPC(resource.Resource, BaseSubhandler):
         log.err(failure)
         message = failure.value.message
         code = self._map_exception(type(failure.value))
+        logger.exception(failure.getTraceback())
         return jsonrpclib.Fault(code, message)
+
+        # return jsonrpclib.Fault(
+        #     '{}: {}'.format(
+        #         failure.type.__name__,
+        #         failure.getErrorMessage()
+        #     ), "error"
+        # )
 
     def auth(self, token, func):
         return True
