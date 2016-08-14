@@ -28,8 +28,6 @@ from twisted.web import http
 
 from txjsonrpc import jsonrpclib
 from txjsonrpc.jsonrpc import BaseProxy, BaseQueryFactory, BaseSubhandler
-from heisen.core.log import logger
-from heisen.config.settings import APP_NAME
 
 # Useful so people don't need to import xmlrpclib directly.
 Fault = xmlrpclib.Fault
@@ -151,12 +149,12 @@ class JSONRPC(resource.Resource, BaseSubhandler):
         if request.getAllHeaders().get('x-user', None):
             username = request.getAllHeaders().get('x-user', None)
         else:
-            username = APP_NAME
+            username = self.app_name
 
         if request.getAllHeaders().get('x-address', None):
             address = request.getAllHeaders().get('x-address', None)
         else:
-            address = 'localhost'
+            address = request.getClientIP()
 
         try:
             function = self._getFunction(functionPath)
@@ -166,7 +164,7 @@ class JSONRPC(resource.Resource, BaseSubhandler):
         except jsonrpclib.Fault as f:
             self._cbRender(f, request, id, version)
         else:
-            if not self.is_jsonp:
+            if not self.is_jsonp:l
                 request.setHeader("content-type", "application/json")
             else:
                 request.setHeader("content-type", "text/javascript")
@@ -216,7 +214,7 @@ class JSONRPC(resource.Resource, BaseSubhandler):
         log.err(failure)
         message = failure.value.message
         code = self._map_exception(type(failure.value))
-        logger.exception(failure.getTraceback())
+        self.logger.exception(failure.getTraceback())
         return jsonrpclib.Fault(code, message)
 
         # return jsonrpclib.Fault(
