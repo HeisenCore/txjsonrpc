@@ -164,7 +164,7 @@ class JSONRPC(resource.Resource, BaseSubhandler):
         except jsonrpclib.Fault as f:
             self._cbRender(f, request, id, version)
         else:
-            if not self.is_jsonp:l
+            if not self.is_jsonp:
                 request.setHeader("content-type", "application/json")
             else:
                 request.setHeader("content-type", "text/javascript")
