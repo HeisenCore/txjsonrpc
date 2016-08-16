@@ -1,4 +1,4 @@
-display_name = "txJSON-RPC"
+display_name = "txJSON-RPC-heisen"
 library_name = "txjsonrpc"
 version = "0.4.3"
 author = "Duncan McGreggor"
