@@ -91,7 +91,7 @@ def dumps(obj, **kwargs):
 
 
 def loads(string, **kws):
-    unmarshalled = json.loads(string, **kws)
+    unmarshalled = json_util.loads(string, **kws)
     # XXX there's going to need to be some version-conditional code here...
     # for versions greater than VERSION_PRE1, we'll have to check for the
     # "error" key, not the "fault" key... and then raise if "fault" is not

@@ -1,6 +1,6 @@
 display_name = "txJSON-RPC-heisen"
 library_name = "txjsonrpc"
-version = "0.4.3"
+version = "0.4.4"
 author = "Duncan McGreggor"
 author_email = "oubiwann@adytum.us"
 license = "BSD, GPL"
