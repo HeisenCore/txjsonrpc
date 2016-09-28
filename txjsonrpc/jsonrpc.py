@@ -1,7 +1,11 @@
+import logging
+
 from twisted.internet import defer, protocol
 from twisted.python import reflect
 
 from txjsonrpc import jsonrpclib
+
+logger = logging.getLogger('txjsonrpc')
 
 
 class BaseSubhandler:
@@ -41,18 +45,36 @@ class BaseSubhandler:
             prefix, functionPath = functionPath.split(self.separator, 1)
             handler = self.getSubHandler(prefix)
             if handler is None:
-                raise jsonrpclib.NoSuchFunction(jsonrpclib.METHOD_NOT_FOUND,
-                    "no such sub-handler %s" % prefix)
+                logger.error(
+                    "{} handler isn't defined, "
+                    "check startup logs for errors or check your code for mistakes".format(prefix))
+
+                raise jsonrpclib.NoSuchFunction(
+                    jsonrpclib.METHOD_NOT_FOUND,
+                    "no such sub-handler %s" % prefix
+                )
             return handler._getFunction(functionPath)
         if functionPath == '__dir__':
             return self._listFunctions
         f = getattr(self, "jsonrpc_%s" % functionPath, None)
         if not f:
-            raise jsonrpclib.NoSuchFunction(jsonrpclib.METHOD_NOT_FOUND,
-                "function %s not found" % functionPath)
+            logger.error(
+                "{} function not found, "
+                "check startup logs for errors or check your code for mistakes".format(functionPath))
+
+            raise jsonrpclib.NoSuchFunction(
+                jsonrpclib.METHOD_NOT_FOUND,
+                "function %s not found" % functionPath
+            )
         elif not callable(f):
-            raise jsonrpclib.NoSuchFunction(jsonrpclib.METHOD_NOT_CALLABLE,
-                "function %s not callable" % functionPath)
+            logger.error(
+                "{} function not callable, "
+                "check startup logs for errors or check your code for mistakes".format(functionPath))
+
+            raise jsonrpclib.NoSuchFunction(
+                jsonrpclib.METHOD_NOT_CALLABLE,
+                "function %s not callable" % functionPath
+            )
         else:
             return f
 
